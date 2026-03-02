@@ -11,48 +11,58 @@ use sdl2::event::Event;
 // }
 
 // See full reference exmaple here: https://github.com/Rust-SDL2/rust-sdl2/blob/master/examples/game-controller.rs
+use sdl2::controller::GameController;
+use std::collections::HashMap;
+
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
     let game_controller_subsystem = sdl_context.game_controller()?;
+    let mut event_pump = sdl_context.event_pump()?;
 
-    let available = game_controller_subsystem
-        .num_joysticks()
-        .map_err(|e| format!("can't enumerate joysticks: {}", e))?;
+    let mut controllers: HashMap<u32, GameController> = HashMap::new();
 
-    println!("{} joysticks available", available);
+    // Enable controller events explicitly (usually enabled by default)
+    game_controller_subsystem.set_event_state(true);
 
-    // Iterate over all available joysticks and look for game controllers.
-    let controller = (0..available)
-        .find_map(|id| {
-            if !game_controller_subsystem.is_game_controller(id) {
-                println!("{} is not a game controller", id);
-                return None;
-            }
+    println!("Waiting for controllers...");
 
-            println!("Attempting to open controller {}", id);
-
-            match game_controller_subsystem.open(id) {
-                Ok(c) => {
-                    // We managed to find and open a game controller,
-                    // exit the loop
-                    println!("Success: opened \"{}\"", c.name());
-                    Some(c)
-                }
-                Err(e) => {
-                    println!("failed: {:?}", e);
-                    None
-                }
-            }
-        })
-        .expect("Couldn't open any controller");
-
-    println!("Controller mapping: {}", controller.mapping());
-    for event in sdl_context.event_pump()?.wait_iter() {
+    for event in event_pump.wait_iter() {
         match event {
-            Event::ControllerButtonDown { button, .. } => println!("Button {:?} down", button),
-            Event::ControllerButtonUp { button, .. } => println!("Button {:?} up", button),
+            Event::ControllerDeviceAdded { which, .. } => {
+                println!("Controller added at index {}", which);
+
+                if game_controller_subsystem.is_game_controller(which) {
+                    match game_controller_subsystem.open(which) {
+                        Ok(controller) => {
+                            let id = controller.instance_id();
+                            println!(
+                                "Opened controller: \"{}\" (instance id: {})",
+                                controller.name(),
+                                id
+                            );
+                            controllers.insert(id, controller);
+                        }
+                        Err(e) => println!("Failed to open controller: {}", e),
+                    }
+                }
+            }
+
+            Event::ControllerDeviceRemoved { which, .. } => {
+                println!("Controller removed (instance id: {})", which);
+                controllers.remove(&which);
+            }
+
+            Event::ControllerButtonDown { which, button, .. } => {
+                println!("Controller {} button {:?} down", which, button);
+            }
+
+            Event::ControllerButtonUp { which, button, .. } => {
+                println!("Controller {} button {:?} up", which, button);
+            }
+
             Event::Quit { .. } => break,
-            _ => (),
+
+            _ => {}
         }
     }
 
