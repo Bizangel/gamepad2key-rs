@@ -21,6 +21,15 @@ And it will then listen to events from ANY SDL2 compatible gamepad and inject X1
 - No gamepad filtering / hiding.
 - No chording.
 
+## Building
+
+Just ensure to have dependencies:
+
+- `xdotool` which includes `libxdo`
+- SDL2
+
+And build using `cargo build --release`.
+
 ## Why?
 
 This project is a small odd-requirement I needed as part of a bigger project. Basically I've been enjoying playing with https://github.com/wunnr/partydeck lately - but I wanted to have some sort of steam-input remapping with the instances so I could make use of extra buttons playing some slightly advanced games.
