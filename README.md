@@ -1,17 +1,40 @@
 ## Gamepad2Key
 
--- WIP --
-
-
 This is an insanely simple CLI program which seeks to read gamepad inputs using SDL2 and injects them into a given X11 session display.
 
-## (Intended) Usage
+## Usage
 
 ```bash
-gamepad2key padconfig.json --display 1
+gamepad2key padconfig.cfg --display :1
+```
+
+Where `padconfig.cfg` looks like
+
+```ini
+[gamepad2key]
+
+# Supports comments
+a = z
+b = x
+
+LB = Left
+RB = Right
+
+RS = BackSpace
+
+dpadup = Up
+dpadleft = Left
+dpadright = Right
+dpaddown = Down
+
+paddle1 = 1
+paddle2 = 2
+paddle3 = 3
+paddle4 = 4
 ```
 
 And it will then listen to events from ANY SDL2 compatible gamepad and inject X11 events according the config.
+See xdotool for the given keycodes references.
 
 ## Goals and Limitations
 
